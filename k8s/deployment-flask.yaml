@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: flask-api
-          image: ghcr.io/anisfrj/flask-api:473a8e310182b336abed7387a1d8b90e661ae19d
+          image: ghcr.io/anisfrj/flask-api:dcd400bf1668f605b1efefaea6d396c103ce9543
           ports:
             - containerPort: 5000
           envFrom:
