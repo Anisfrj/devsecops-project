@@ -12,7 +12,7 @@ r = redis.Redis(
 
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok"}), 200
+    return jsonify({"status": "c'est carré"}), 200
 
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
