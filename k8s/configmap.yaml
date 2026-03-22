@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flask-config
+  namespace: devsecops-project
+data:
+  REDIS_HOST: "redis-service"
+  APP_ENV: "production"

@@ -1,0 +1,52 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: ghcr.io/anisfrj/flask-api
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME:${{ github.sha }} ./app
+
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL,HIGH
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image to GHCR
+        run: |
+          docker push $IMAGE_NAME:${{ github.sha }}
+          docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest
+
+      - name: Update K8s manifest with new image tag
+        run: |
+          sed -i "s|image: ghcr.io/anisfrj/flask-api.*|image: $IMAGE_NAME:${{ github.sha }}|" k8s/deployment-flask.yaml
+          git config user.email "ci@github.com"
+          git config user.name "GitHub Actions"
+          git add k8s/deployment-flask.yaml
+          git commit -m "ci: update image to ${{ github.sha }}"
+          git push
